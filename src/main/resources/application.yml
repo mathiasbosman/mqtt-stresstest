@@ -1,0 +1,14 @@
+spring:
+  task:
+    execution:
+      pool:
+        core-size: 100
+mqtt:
+  qos-level: 1
+test:
+  config:
+    amount-of-clients: ${spring.task.execution.pool.core-size}
+    amount-of-data-points: 100
+    message-delay: 100
+    device-prefix: "TestDevice_"
+    includeCreationTimestamp: true
