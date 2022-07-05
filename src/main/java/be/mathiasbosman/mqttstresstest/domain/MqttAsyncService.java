@@ -60,6 +60,12 @@ public class MqttAsyncService {
     }
   }
 
+  @PreDestroy
+  public void preDestroy() {
+    log.warn("Manually stopping application. Errors might be thrown!");
+    stopClients();
+  }
+
   public void stopClients() {
     isStopped = true;
     if (clients.isEmpty()) {
