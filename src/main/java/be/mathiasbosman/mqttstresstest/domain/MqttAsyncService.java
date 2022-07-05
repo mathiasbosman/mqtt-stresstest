@@ -4,19 +4,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class MqttAsyncService {
 
+  private final ApplicationContext applicationContext;
   private final List<IMqttClient> clients = new LinkedList<>();
   private boolean isStopped;
 
@@ -54,7 +59,6 @@ public class MqttAsyncService {
     }
   }
 
-  @PreDestroy
   public void stopClients() {
     isStopped = true;
     if (clients.isEmpty()) {
@@ -64,11 +68,14 @@ public class MqttAsyncService {
     log.warn("Stop signal received, closing {} client(s)", clients.size());
     clients.forEach(client -> {
       try {
-        log.info("Closing client {}", client.getClientId());
-        client.disconnect();
+        if (client.isConnected()) {
+          log.info("Closing client {}", client.getClientId());
+          client.disconnect();
+        }
       } catch (MqttException e) {
         log.error("Error while closing client {}", client.getClientId(), e);
       }
     });
+    ((ConfigurableApplicationContext) applicationContext).close();
   }
 }

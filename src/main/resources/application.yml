@@ -10,5 +10,6 @@ test:
     amount-of-clients: ${spring.task.execution.pool.core-size}
     amount-of-data-points: 100
     message-delay: 100
-    device-prefix: "TestDevice_"
+    token-prefix: "TestDevice_"
     includeCreationTimestamp: true
+    ttl: 60

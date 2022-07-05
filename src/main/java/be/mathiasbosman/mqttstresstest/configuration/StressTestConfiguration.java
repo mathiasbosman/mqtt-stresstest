@@ -32,5 +32,10 @@ public class StressTestConfiguration {
   /**
    * Device prefix that will be appended with an index running from 1 to the amount of clients
    */
-  private String devicePrefix = "TestDevice_";
+  private String tokenPrefix = "TestDevice_";
+
+  /**
+   * Amount of seconds that the application has to run
+   */
+  private int ttl = 60;
 }

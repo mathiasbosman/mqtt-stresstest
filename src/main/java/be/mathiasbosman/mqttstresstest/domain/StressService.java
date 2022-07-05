@@ -1,8 +1,10 @@
 package be.mathiasbosman.mqttstresstest.domain;
 
+import be.mathiasbosman.mqttstresstest.MqttStressTestApplication;
 import be.mathiasbosman.mqttstresstest.configuration.MqttConfig;
 import be.mathiasbosman.mqttstresstest.configuration.StressTestConfiguration;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -14,6 +16,10 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -21,12 +27,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class StressService {
 
+  private final ApplicationContext applicationContext;
   private final MqttAsyncService mqttAsyncService;
   private final MqttConfig mqttConfig;
   private final StressTestConfiguration testConfiguration;
 
   @Value("${spring.task.execution.pool.core-size}")
   private int executionPoolSize;
+
+  private LocalDateTime endTime;
 
   @PostConstruct
   public void startStressTest() {
@@ -35,17 +44,22 @@ public class StressService {
           executionPoolSize, testConfiguration.getAmountOfClients());
       return;
     }
+    endTime = LocalDateTime.now().plusSeconds(testConfiguration.getTtl());
     log.info("Start of stress test with {} clients", testConfiguration.getAmountOfClients());
+    log.info("Will initiate shutdown at {}", endTime);
     //setup clients and create connections
     IntStream.range(1, testConfiguration.getAmountOfClients() + 1)
         .forEach(index -> {
-          String username = testConfiguration.getDevicePrefix() + index;
-          mqttAsyncService.createClientAndStartPublishing(mqttConfig.getServerUrl(), username,
+          String token = testConfiguration.getTokenPrefix() + index;
+          mqttAsyncService.createClientAndStartPublishing(mqttConfig.getServerUrl(), token,
               this::publishForClient);
         });
   }
 
   public void publishForClient(IMqttClient client) {
+    if (LocalDateTime.now().isAfter(endTime)) {
+      mqttAsyncService.stopClients();
+    }
     publishDataForUser(client, generateDataPoints());
     try {
       TimeUnit.MILLISECONDS.sleep(testConfiguration.getMessageDelay());
