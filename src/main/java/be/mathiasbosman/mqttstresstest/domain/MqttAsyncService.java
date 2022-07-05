@@ -45,6 +45,7 @@ public class MqttAsyncService {
         log.info("Connecting client {}", client.getClientId());
         client.connect(options);
         clients.add(client);
+        log.info("Start of publishing messages for client {}", client.getClientId());
         while (!isStopped) {
           publisher.accept(client);
         }

@@ -76,7 +76,7 @@ public class StressService {
     msg.setRetained(mqttConfig.isRetainMessages());
 
     try {
-      log.info("Publishing data with client {}", client.getClientId());
+      log.debug("Publishing data with client {}", client.getClientId());
       if (!client.isConnected()) {
         log.warn("Client not (longer) connected {}", client.getClientId());
       } else {
