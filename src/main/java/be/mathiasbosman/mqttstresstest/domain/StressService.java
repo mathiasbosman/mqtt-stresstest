@@ -6,6 +6,7 @@ import be.mathiasbosman.mqttstresstest.util.MqttUtils;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -26,6 +27,7 @@ public class StressService {
   private final MqttAsyncService mqttAsyncService;
   private final MqttConfig mqttConfig;
   private final StressTestConfiguration testConfiguration;
+  private final Map<String, StatisticRecord> processCount;
 
   @Value("${spring.task.execution.pool.core-size}")
   private int executionPoolSize;
@@ -69,13 +71,20 @@ public class StressService {
   }
 
   private void publishData(IMqttClient client, List<DataPointRecord> dataPoints) {
-    log.trace("Creating message");
     MqttMessage msg = new MqttMessage(getJsonString(dataPoints).getBytes(StandardCharsets.UTF_8));
     msg.setQos(mqttConfig.getQosLevel());
     msg.setRetained(mqttConfig.isRetainMessages());
+    String clientId = client.getClientId();
+    processCount.putIfAbsent(
+        clientId,
+        new StatisticRecord(LocalDateTime.now()));
     try {
-      log.debug("Publishing data with client {}", client.getClientId());
+      log.debug("Publishing data with client {}", clientId);
       client.publish(mqttConfig.getTopic(), msg);
+      StatisticRecord statisticRecord = processCount.get(clientId);
+      statisticRecord.incrementPublishedMessages();
+      processCount.put(clientId, statisticRecord);
+      log.trace("Statistics for {} = {}", clientId, processCount.get(clientId));
     } catch (MqttException e) {
       log.error("Error while publishing", e);
     }

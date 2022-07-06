@@ -3,6 +3,7 @@ package be.mathiasbosman.mqttstresstest.domain;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
+import javax.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -25,6 +26,7 @@ public class MqttAsyncService {
   private final Set<String> connectedUsers = new LinkedHashSet<>();
 
   private boolean isStopped;
+  private boolean isStopping;
 
 
   @Async
@@ -73,6 +75,12 @@ public class MqttAsyncService {
     log.info("Stop signal received, {} clients will start closing", clients.size());
   }
 
+  @PreDestroy
+  public void preDestroy() {
+    isStopping = true;
+    stopClients();
+  }
+
   private void closeConnection(IMqttClient client) {
     String clientId = client.getClientId();
     try {
@@ -92,6 +100,8 @@ public class MqttAsyncService {
   }
 
   private void closeApplication() {
-    ((ConfigurableApplicationContext) applicationContext).close();
+    if (!isStopping) {
+      ((ConfigurableApplicationContext) applicationContext).close();
+    }
   }
 }
