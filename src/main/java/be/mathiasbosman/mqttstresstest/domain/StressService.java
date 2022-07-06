@@ -5,6 +5,7 @@ import be.mathiasbosman.mqttstresstest.configuration.StressTestConfiguration;
 import be.mathiasbosman.mqttstresstest.util.MqttUtils;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -62,7 +63,8 @@ public class StressService {
       mqttAsyncService.stopClients();
       return;
     }
-    publishData(client, generateDataPoints());
+    LocalDateTime publishTime = LocalDateTime.now();
+    publishData(client, generateDataPoints(publishTime), publishTime);
     try {
       TimeUnit.MILLISECONDS.sleep(testConfiguration.getMessageDelay());
     } catch (InterruptedException e) {
@@ -70,7 +72,8 @@ public class StressService {
     }
   }
 
-  private void publishData(IMqttClient client, List<DataPointRecord> dataPoints) {
+  private void publishData(IMqttClient client, List<DataPointRecord> dataPoints,
+      LocalDateTime publishTime) {
     MqttMessage msg = new MqttMessage(getJsonString(dataPoints).getBytes(StandardCharsets.UTF_8));
     msg.setQos(mqttConfig.getQosLevel());
     msg.setRetained(mqttConfig.isRetainMessages());
@@ -82,7 +85,7 @@ public class StressService {
       log.debug("Publishing data with client {}", clientId);
       client.publish(mqttConfig.getTopic(), msg);
       StatisticRecord statisticRecord = processCount.get(clientId);
-      statisticRecord.incrementPublishedMessages();
+      statisticRecord.publish(publishTime);
       processCount.put(clientId, statisticRecord);
       log.trace("Statistics for {} = {}", clientId, processCount.get(clientId));
     } catch (MqttException e) {
@@ -90,7 +93,7 @@ public class StressService {
     }
   }
 
-  private List<DataPointRecord> generateDataPoints() {
+  private List<DataPointRecord> generateDataPoints(LocalDateTime publishTime) {
     List<DataPointRecord> result = IntStream.range(1, testConfiguration.getAmountOfDataPoints())
         .mapToObj(index -> {
           String key = "key_" + index;
@@ -99,7 +102,9 @@ public class StressService {
         })
         .collect(Collectors.toList());
     if (testConfiguration.isIncludeCreationTimestamp()) {
-      result.add(new DataPointRecord("created_at", System.currentTimeMillis()));
+      result.add(
+          new DataPointRecord("created_at",
+              publishTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
     }
     return result;
   }
