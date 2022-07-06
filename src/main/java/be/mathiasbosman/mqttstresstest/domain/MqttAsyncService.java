@@ -44,18 +44,20 @@ public class MqttAsyncService {
           serverUrl,
           "mock_client_" + username,
           new MemoryPersistence())) {
-        log.debug("Connecting client {}", client.getClientId());
+        String clientId = client.getClientId();
+        log.debug("Connecting client {}", clientId);
         client.connect(options);
         clients.add(client);
         connectedUsers.add(username);
-        log.info("Start of publishing messages for client {}", client.getClientId());
+        log.info("Start of publishing messages for client {}", clientId);
         while (!isStopped) {
-          publisher.accept(client);
+          if (!client.isConnected()) {
+            log.warn("Client {} not connected (anymore)", clientId);
+          } else {
+            publisher.accept(client);
+          }
         }
         closeConnection(client);
-        if (clients.isEmpty()) {
-          closeApplication();
-        }
       }
     } catch (MqttException e) {
       if (isStopped) {
@@ -76,12 +78,16 @@ public class MqttAsyncService {
     try {
       if (client.isConnected()) {
         log.info("Closing client {}", clientId);
-        client.disconnect();
+        client.disconnectForcibly();
         log.info("Client {} closed successfully", clientId);
       }
       clients.remove(client);
     } catch (MqttException e) {
       log.error("Error while closing client {}", clientId, e);
+    }
+
+    if (clients.isEmpty()) {
+      closeApplication();
     }
   }
 

@@ -69,10 +69,6 @@ public class StressService {
   }
 
   private void publishData(IMqttClient client, List<DataPointRecord> dataPoints) {
-    if (!client.isConnected()) {
-      log.warn("Client {} not connected (anymore)", client.getClientId());
-      return;
-    }
     log.trace("Creating message");
     MqttMessage msg = new MqttMessage(getJsonString(dataPoints).getBytes(StandardCharsets.UTF_8));
     msg.setQos(mqttConfig.getQosLevel());
