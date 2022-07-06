@@ -1,7 +1,7 @@
 package be.mathiasbosman.mqttstresstest.domain;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import javax.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -22,13 +22,19 @@ import org.springframework.stereotype.Service;
 public class MqttAsyncService {
 
   private final ApplicationContext applicationContext;
-  private final List<IMqttClient> clients = new LinkedList<>();
+  private final Set<IMqttClient> clients = new LinkedHashSet<>();
+  private final Set<String> connectedUsers = new LinkedHashSet<>();
+
   private boolean isStopped;
 
 
   @Async
   public void createClientAndStartPublishing(String serverUrl,
       String username, Consumer<IMqttClient> publisher) {
+    if (connectedUsers.contains(username)) {
+      log.warn("Username {} already in connected pool", username);
+      return;
+    }
     if (isStopped) {
       log.warn("Stop signal received");
       return;
@@ -40,7 +46,9 @@ public class MqttAsyncService {
       options.setCleanSession(true);
       options.setConnectionTimeout(10);
       options.setUserName(username);
-      try(IMqttClient client = new MqttClient(serverUrl, "mock_client_" + options.getUserName(),
+      try (IMqttClient client = new MqttClient(
+          serverUrl,
+          "mock_client_" + options.getUserName(),
           new MemoryPersistence())) {
         log.info("Connecting client {}", client.getClientId());
         client.connect(options);
@@ -73,16 +81,19 @@ public class MqttAsyncService {
       return;
     }
     log.warn("Stop signal received, closing {} client(s)", clients.size());
-    clients.forEach(client -> {
-      try {
-        if (client.isConnected()) {
-          log.info("Closing client {}", client.getClientId());
-          client.disconnect();
-        }
-      } catch (MqttException e) {
-        log.error("Error while closing client {}", client.getClientId(), e);
-      }
-    });
+    clients.forEach(this::closeConnection);
+    connectedUsers.clear();
     ((ConfigurableApplicationContext) applicationContext).close();
+  }
+
+  private void closeConnection(IMqttClient client) {
+    try {
+      if (client.isConnected()) {
+        log.info("Closing client {}", client.getClientId());
+        client.disconnect();
+      }
+    } catch (MqttException e) {
+      log.error("Error while closing client {}", client.getClientId(), e);
+    }
   }
 }
