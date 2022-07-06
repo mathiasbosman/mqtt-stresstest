@@ -4,6 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import javax.annotation.PreDestroy;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -30,8 +31,8 @@ public class MqttAsyncService {
 
 
   @Async
-  public void createClientAndStartPublishing(String serverUrl,
-      MqttConnectOptions options, Consumer<IMqttClient> publisher) {
+  public void createClientAndStartPublishing(@NonNull String serverUrl,
+      @NonNull MqttConnectOptions options, @NonNull Consumer<IMqttClient> publisher) {
     String username = options.getUserName();
     if (connectedUsers.contains(username)) {
       log.warn("Username {} already in connected pool", username);
@@ -55,6 +56,7 @@ public class MqttAsyncService {
         while (!isStopped) {
           if (!client.isConnected()) {
             log.warn("Client {} not connected (anymore)", clientId);
+            break;
           } else {
             publisher.accept(client);
           }
@@ -63,7 +65,7 @@ public class MqttAsyncService {
       }
     } catch (MqttException e) {
       if (isStopped) {
-        log.warn("Stop signal received, connection closing", e);
+        log.warn("Stop signal received during publish", e);
       } else {
         log.error("Error connecting to client for user {}", username, e);
       }
@@ -71,8 +73,10 @@ public class MqttAsyncService {
   }
 
   public void stopClients() {
-    isStopped = true;
-    log.info("Stop signal received, {} clients will start closing", clients.size());
+    if (!isStopped) {
+      isStopped = true;
+      log.info("Stop signal received, {} clients will start closing", clients.size());
+    }
   }
 
   @PreDestroy
@@ -81,7 +85,7 @@ public class MqttAsyncService {
     stopClients();
   }
 
-  private void closeConnection(IMqttClient client) {
+  private void closeConnection(@NonNull IMqttClient client) {
     String clientId = client.getClientId();
     try {
       if (client.isConnected()) {
