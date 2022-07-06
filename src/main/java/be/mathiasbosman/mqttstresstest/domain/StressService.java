@@ -35,20 +35,41 @@ public class StressService {
 
   private LocalDateTime endTime;
 
+  private boolean preRunChecks() {
+    if (testConfiguration.getMaximumClientIndex() > testConfiguration.getMaximumClientIndex()) {
+      log.error("The minimum index should not be bigger then the maximum index");
+      return false;
+    }
+
+    int totalClients =
+        testConfiguration.getMaximumClientIndex() - testConfiguration.getMinimumClientIndex() + 1;
+    if (executionPoolSize < totalClients) {
+      log.error("The task execution pool size {} is smaller than the amount of clients {}",
+          executionPoolSize, totalClients);
+      return false;
+    }
+
+    return true;
+  }
+
   @PostConstruct
   public void startStressTest() {
-    if (executionPoolSize < testConfiguration.getAmountOfClients()) {
-      log.error("The task execution pool size {} is smaller than the amount of clients {}",
-          executionPoolSize, testConfiguration.getAmountOfClients());
-      return;
+    if (!preRunChecks()) {
+      throw new IllegalStateException(
+          "Wrong configuration detected. Check the error logs for more info");
     }
+
+    int totalClients =
+        testConfiguration.getMaximumClientIndex() - testConfiguration.getMinimumClientIndex() + 1;
     endTime = LocalDateTime.now().plusSeconds(testConfiguration.getTtl());
     log.info("Start of stress test with {} clients sending {} data points every {} ms",
-        testConfiguration.getAmountOfClients(),
+        totalClients,
         testConfiguration.getAmountOfDataPoints(),
         testConfiguration.getMessageDelay());
     log.info("Will run for {} s and initiate shutdown at {}", testConfiguration.getTtl(), endTime);
-    IntStream.range(1, testConfiguration.getAmountOfClients() + 1)
+    IntStream.range(
+            testConfiguration.getMinimumClientIndex(),
+            testConfiguration.getMaximumClientIndex() + 1)
         .forEach(index -> {
           String token = testConfiguration.getTokenPrefix() + index;
           mqttAsyncService.createClientAndStartPublishing(

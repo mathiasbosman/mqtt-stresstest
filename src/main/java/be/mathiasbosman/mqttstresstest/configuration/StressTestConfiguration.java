@@ -21,10 +21,18 @@ public class StressTestConfiguration {
    * Whether to create an extra data point with the creation timestamp
    */
   private boolean includeCreationTimestamp = true;
+
   /**
-   * Amount of clients to simulate (this is the amount of async threads that will be started)
+   * Minimum index of a client. Threads will be generated for clients with indexes rangen from the
+   * minimum index to the maximum.
    */
-  private int amountOfClients = 100;
+  private int minimumClientIndex = 1;
+
+  /**
+   * Maximum index of a client. Threads will be generated for clients with indexes rangen from the
+   * minimum index to the maximum.
+   */
+  private int maximumClientIndex = 100;
   /**
    * Delay in ms between messages per client
    */

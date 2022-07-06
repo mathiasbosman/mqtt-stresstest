@@ -7,9 +7,9 @@ mqtt:
   qos-level: 1
 test:
   config:
-    amount-of-clients: ${spring.task.execution.pool.core-size}
     amount-of-data-points: 100
     message-delay: 100
     token-prefix: "TestDevice_"
     includeCreationTimestamp: true
     ttl: 60
+    maximum-client-index: ${spring.task.execution.pool.core-size}
