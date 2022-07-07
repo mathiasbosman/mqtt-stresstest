@@ -2,6 +2,7 @@ package be.mathiasbosman.mqttstresstest.domain;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javax.annotation.PreDestroy;
 import lombok.NonNull;
@@ -32,7 +33,8 @@ public class MqttAsyncService {
 
   @Async
   public void createClientAndStartPublishing(@NonNull String serverUrl,
-      @NonNull MqttConnectOptions options, @NonNull Consumer<IMqttClient> publisher) {
+      @NonNull MqttConnectOptions options, @NonNull Consumer<IMqttClient> publisher,
+      int delay, boolean retainConnection) {
     String username = options.getUserName();
     if (connectedUsers.contains(username)) {
       log.warn("Username {} already in connected pool", username);
@@ -49,17 +51,12 @@ public class MqttAsyncService {
           new MemoryPersistence())) {
         String clientId = client.getClientId();
         log.debug("Connecting client {}", clientId);
-        client.connect(options);
         clients.add(client);
         connectedUsers.add(username);
         log.info("Start of publishing messages for client {}", clientId);
         while (!isStopped) {
-          if (!client.isConnected()) {
-            log.warn("Client {} not connected (anymore)", clientId);
-            break;
-          } else {
-            publisher.accept(client);
-          }
+          consumePublisher(client, options, publisher, retainConnection);
+          delayNexPublication(delay, clientId);
         }
         closeConnection(client);
       }
@@ -69,6 +66,31 @@ public class MqttAsyncService {
       } else {
         log.error("Error connecting to client for user {}", username, e);
       }
+    }
+  }
+
+  private void delayNexPublication(int delay, String clientId) {
+    try {
+      log.trace("Delaying publication for {} ms", delay);
+      TimeUnit.MILLISECONDS.sleep(delay);
+    } catch (InterruptedException e) {
+      log.debug("Thread interrupted for client {}", clientId);
+    }
+  }
+
+  private void consumePublisher(IMqttClient client, MqttConnectOptions options,
+      Consumer<IMqttClient> publisher, boolean retainConnection) throws MqttException {
+    if (isStopped) {
+      return;
+    }
+    if (!client.isConnected()) {
+      log.trace("Connection to client {}", client.getClientId());
+      client.connect(options);
+    }
+    publisher.accept(client);
+    if (!retainConnection) {
+      log.trace("Closing connection to {}", client.getClientId());
+      client.disconnect();
     }
   }
 

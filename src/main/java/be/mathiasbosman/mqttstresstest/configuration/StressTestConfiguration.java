@@ -46,4 +46,10 @@ public class StressTestConfiguration {
    * Amount of seconds that the application has to run
    */
   private int ttl = 60;
+
+
+  /**
+   * Indicates if a connection should be closed after publishing
+   */
+  private boolean retainConnection = true;
 }

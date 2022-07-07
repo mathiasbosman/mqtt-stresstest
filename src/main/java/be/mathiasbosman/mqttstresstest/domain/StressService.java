@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.annotation.PostConstruct;
@@ -67,6 +66,7 @@ public class StressService {
         totalClients,
         testConfig.getAmountOfDataPoints(),
         testConfig.getMessageDelay());
+    log.info("Connection retention is set to {}", testConfig.isRetainConnection());
     log.info("Will run for {} s and initiate shutdown at {}", testConfig.getTtl(), endTime);
     log.info("Data point creation timestamp addition = {}",
         testConfig.isIncludeCreationTimestamp());
@@ -79,7 +79,9 @@ public class StressService {
           mqttAsyncService.createClientAndStartPublishing(
               mqttConfig.getServerUrl(),
               MqttUtils.createConnectOptions(token),
-              this::publishForClient);
+              this::publishForClient,
+              testConfig.getMessageDelay(),
+              testConfig.isRetainConnection());
         });
   }
 
@@ -97,12 +99,6 @@ public class StressService {
           publishTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
     }
     publishData(client, dataPoints, publishTime);
-
-    try {
-      TimeUnit.MILLISECONDS.sleep(testConfig.getMessageDelay());
-    } catch (InterruptedException e) {
-      log.debug("Thread interrupted for client {}", client.getClientId());
-    }
   }
 
   private void publishData(@NonNull IMqttClient client, @NonNull List<DataPointRecord> dataPoints,
@@ -133,7 +129,7 @@ public class StressService {
           String value = String.valueOf(Math.random());
           return new DataPointRecord(key, value);
         })
-        .toList();
+        .collect(Collectors.toList());
   }
 
   private String getJsonString(@NonNull List<DataPointRecord> records) {
