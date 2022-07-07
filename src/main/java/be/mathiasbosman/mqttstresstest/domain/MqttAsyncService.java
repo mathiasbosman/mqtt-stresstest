@@ -83,13 +83,11 @@ public class MqttAsyncService {
     if (isStopped) {
       return;
     }
-    if (!client.isConnected()) {
-      log.trace("Connection to client {}", client.getClientId());
+    if (!retainConnection || !client.isConnected()) {
       client.connect(options);
     }
     publisher.accept(client);
     if (!retainConnection) {
-      log.trace("Closing connection to {}", client.getClientId());
       client.disconnect();
     }
   }

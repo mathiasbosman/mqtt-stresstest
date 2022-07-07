@@ -23,9 +23,16 @@ public class StatisticRecord {
   @Override
   public String toString() {
     long epochMilliStart = created.atZone(zoneId).toInstant().toEpochMilli();
-    long epochMilliEnd = latestPublish.atZone(zoneId).toInstant().toEpochMilli();
-    return "client created at " + created + " (" + epochMilliStart + ") "
-        + "published " + amountOfPublishedMessages + " messages "
-        + "latest at " + latestPublish + " (" + epochMilliEnd + ")";
+    StringBuilder toString = new StringBuilder(
+        "client created at " + created + " (" + epochMilliStart + ") "
+            + "published " + amountOfPublishedMessages + " messages ");
+
+    if (latestPublish != null) {
+      long epochMilliEnd = latestPublish.atZone(zoneId).toInstant().toEpochMilli();
+      toString.append("latest at ").append(latestPublish)
+          .append(" (").append(epochMilliEnd).append(")");
+    }
+
+    return toString.toString();
   }
 }

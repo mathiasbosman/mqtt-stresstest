@@ -116,9 +116,9 @@ public class StressService {
       StatisticRecord statisticRecord = processCount.get(clientId);
       statisticRecord.publish(publishTime);
       processCount.put(clientId, statisticRecord);
-      log.trace("Statistics for {} = {}", clientId, processCount.get(clientId));
+      log.trace("Statistics for {} = {}", clientId, statisticRecord);
     } catch (MqttException e) {
-      log.error("Error while publishing", e);
+      log.error("Error while publishing with {}", clientId, e);
     }
   }
 
