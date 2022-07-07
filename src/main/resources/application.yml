@@ -5,6 +5,9 @@ spring:
         core-size: 100
 mqtt:
   qos-level: 1
+  server-url: ""
+  topic: ""
+  retain-messages: true
 test:
   config:
     amount-of-data-points: 100
@@ -13,3 +16,5 @@ test:
     includeCreationTimestamp: true
     ttl: 60
     maximum-client-index: ${spring.task.execution.pool.core-size}
+    minimum-client-index: 1
+    retain-connection: true
