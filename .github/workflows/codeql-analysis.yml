@@ -20,6 +20,12 @@ jobs:
           distribution: adopt
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
+      - name: Cache Maven packages
+        uses: actions/cache@v2.1.7
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
       - name: Build
         run: mvn -B install
       - name: Perform CodeQL Analysis
