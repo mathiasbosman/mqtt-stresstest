@@ -30,14 +30,14 @@ jobs:
       packages: write
 
     steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: master
       - uses: actions/setup-java@v3
         with:
           java-version: 17
           distribution: adopt
           cache: maven
-      - uses: actions/checkout@v3
-        with:
-          ref: master
       - name: Build
         run: |
           mvn -B clean install -DskipTests
