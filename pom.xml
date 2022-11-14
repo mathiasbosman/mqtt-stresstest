@@ -9,7 +9,7 @@
   </parent>
   <groupId>be.mathiasbosman</groupId>
   <artifactId>mqtt-stresstest</artifactId>
-  <version>0.0.6</version>
+  <version>0.0.7-SNAPSHOT</version>
   <name>mqtt-stresstest</name>
   <description>mqtt-stresstest</description>
   <properties>
