@@ -21,3 +21,7 @@ Once the time to live (in seconds) has passed the application will initiate a sh
 connections.
 
 If you shut down the application manually the `@PreDestroy` method will attempt the same.
+
+
+# Release Deployment
+See [release deployment](https://github.com/mathiasbosman/branching-strategy/blob/master/release-deployment.md).
