@@ -1,4 +1,6 @@
 # MQTT stress tester
+[![Code QL](https://github.com/mathiasbosman/mqtt-stresstest/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/mathiasbosman/mqtt-stresstest/actions/workflows/codeql-analysis.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mathiasbosman_mqtt-stresstest&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=mathiasbosman_mqtt-stresstest)
 
 ## Configuration
 
