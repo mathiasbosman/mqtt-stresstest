@@ -9,7 +9,7 @@
   </parent>
   <groupId>be.mathiasbosman</groupId>
   <artifactId>mqtt-stresstest</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
   <name>mqtt-stresstest</name>
   <description>mqtt-stresstest</description>
   <properties>
@@ -80,6 +80,6 @@
 
   <scm>
     <developerConnection>scm:git:https://github.com/mathiasbosman/${project.artifactId}</developerConnection>
-    <tag>v1.0.0</tag>
+    <tag>v0.0.6</tag>
   </scm>
 </project>
