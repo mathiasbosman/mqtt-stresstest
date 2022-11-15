@@ -1,4 +1,6 @@
 # MQTT stress tester
+[![Code QL](https://github.com/mathiasbosman/mqtt-stresstest/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/mathiasbosman/mqtt-stresstest/actions/workflows/codeql-analysis.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mathiasbosman_mqtt-stresstest&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=mathiasbosman_mqtt-stresstest)
 
 ## Configuration
 
@@ -21,3 +23,7 @@ Once the time to live (in seconds) has passed the application will initiate a sh
 connections.
 
 If you shut down the application manually the `@PreDestroy` method will attempt the same.
+
+
+# Release Deployment
+See [release deployment](https://github.com/mathiasbosman/branching-strategy/blob/master/release-deployment.md).
