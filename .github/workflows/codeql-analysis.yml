@@ -1,7 +1,5 @@
 name: Code QL
 on:
-  push:
-    branches: [ master ]
   pull_request:
   schedule:
     - cron: '43 9 * * 3'
