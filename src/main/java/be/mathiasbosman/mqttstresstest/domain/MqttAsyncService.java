@@ -45,27 +45,31 @@ public class MqttAsyncService {
       return;
     }
     try {
-      try (IMqttClient client = new MqttClient(
-          serverUrl,
-          "mock_client_" + username,
-          new MemoryPersistence())) {
-        String clientId = client.getClientId();
-        log.debug("Connecting client {}", clientId);
-        clients.add(client);
-        connectedUsers.add(username);
-        log.info("Start of publishing messages for client {}", clientId);
-        while (!isStopped) {
-          consumePublisher(client, options, publisher, retainConnection);
-          delayNexPublication(delay, clientId);
-        }
-        closeConnection(client);
-      }
+      setupClient(serverUrl, options, delay, publisher, retainConnection);
     } catch (MqttException e) {
       if (isStopped) {
         log.warn("Stop signal received during publish", e);
       } else {
         log.error("Error connecting to client for user {}", username, e);
       }
+    }
+  }
+
+  private void setupClient(String serverUrl, MqttConnectOptions options, int delay,
+      Consumer<IMqttClient> publisher, boolean retainConnection) throws MqttException{
+    String username = options.getUserName();
+    try (IMqttClient client = new MqttClient(serverUrl, "mock_client_" + username,
+        new MemoryPersistence())) {
+      String clientId = client.getClientId();
+      log.debug("Connecting client {}", clientId);
+      clients.add(client);
+      connectedUsers.add(username);
+      log.info("Start of publishing messages for client {} with a delay of {}ms", clientId, delay);
+      while (!isStopped) {
+        consumePublisher(client, options, publisher, retainConnection);
+        delayNexPublication(delay, clientId);
+      }
+      closeConnection(client);
     }
   }
 

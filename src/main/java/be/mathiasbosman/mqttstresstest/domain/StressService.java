@@ -134,7 +134,9 @@ public class StressService {
 
   private String getJsonString(@NonNull List<DataPointRecord> records) {
     return "{"
-        + records.stream().map(DataPointRecord::toString).collect(Collectors.joining(","))
+        + records.stream()
+        .map(DataPointRecord::toString)
+        .collect(Collectors.joining(","))
         + "}";
   }
 
